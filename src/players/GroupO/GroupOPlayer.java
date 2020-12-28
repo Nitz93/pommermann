@@ -107,29 +107,4 @@ public class GroupOPlayer extends ParameterizedPlayer {
     public Player copy() {
         return new GroupOPlayer(seed, playerID, params);
     }
-
-    private void rollRnd(GameState gs, Types.ACTIONS act)
-    {
-        //Simple, all random first, then my position.
-        int nPlayers = 4;
-        Types.ACTIONS[] actionsAll = new Types.ACTIONS[4];
-
-        for(int i = 0; i < nPlayers; ++i)
-        {
-            if(i == getPlayerID() - Types.TILETYPE.AGENT0.getKey())
-            {
-                actionsAll[i] = act;
-            }else{
-                if(rndOpponentModel){
-                    int actionIdx = m_rnd.nextInt(gs.nActions());
-                    actionsAll[i] = Types.ACTIONS.all().get(actionIdx);
-                }else
-                {
-                    actionsAll[i] = Types.ACTIONS.ACTION_STOP;
-                }
-            }
-        }
-
-        gs.next(actionsAll);
-    }
 }

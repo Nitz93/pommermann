@@ -13,8 +13,7 @@ import utils.Vector2d;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class SingleTreeNodeGroupO
-{
+public class SingleTreeNodeGroupO {
     public GroupOParams params;
 
     private SingleTreeNodeGroupO parent;
@@ -48,16 +47,14 @@ public class SingleTreeNodeGroupO
         children = new SingleTreeNodeGroupO[num_actions];
         totValue = 0.0;
         this.childIdx = childIdx;
-        if(parent != null) {
+        if (parent != null) {
             m_depth = parent.m_depth + 1;
             this.rootStateHeuristic = sh;
-        }
-        else
+        } else
             m_depth = 0;
     }
 
-    void setRootGameState(GameState gs)
-    {
+    void setRootGameState(GameState gs) {
         this.rootState = gs;
         if (params.heuristic_method == params.CUSTOM_HEURISTIC)
             this.rootStateHeuristic = new CustomHeuristic(gs);
@@ -65,19 +62,16 @@ public class SingleTreeNodeGroupO
             this.rootStateHeuristic = new AdvancedHeuristic(gs, m_rnd);
     }
 
-    void initializeTree(GameState gsCopy)
-    {
+    void initializeTree(GameState gsCopy) {
         ArrayList<Types.ACTIONS> actionsList = Types.ACTIONS.all();
-        for (int i = 0; i < actions.length; i++)
-        {
+        for (int i = 0; i < actions.length; i++) {
             int bestAct = i;
-            roll(gsCopy,actions[bestAct]);
-            SingleTreeNodeGroupO tn = new SingleTreeNodeGroupO(params,this,i,this.m_rnd,num_actions,
+            roll(gsCopy, actions[bestAct]);
+            SingleTreeNodeGroupO tn = new SingleTreeNodeGroupO(params, this, i, this.m_rnd, num_actions,
                     actions, fmCallsCount, rootStateHeuristic);
             children[i] = tn;
-            for(int j = 0; j < params.m; i++)
-            {
-                roll(gsCopy,actions[bestAct]);
+            for (int j = 0; j < params.m; j++) {
+                roll(gsCopy, actions[bestAct]);
             }
             double valState = rootStateHeuristic.evaluateState(gsCopy);
             backUp(children[i], valState);
@@ -95,7 +89,7 @@ public class SingleTreeNodeGroupO
         int remainingLimit = 5;
         boolean stop = false;
 
-        while(!stop){
+        while (!stop) {
 
             GameState state = rootState.copy();
             ElapsedCpuTimer elapsedTimerIteration = new ElapsedCpuTimer();
@@ -104,30 +98,34 @@ public class SingleTreeNodeGroupO
             backUp(selected, delta);
 
             //Stopping condition
-            if(params.stop_type == params.STOP_TIME) {
+            if (params.stop_type == params.STOP_TIME) {
                 numIters++;
-                acumTimeTaken += (elapsedTimerIteration.elapsedMillis()) ;
-                avgTimeTaken  = acumTimeTaken/numIters;
+                acumTimeTaken += (elapsedTimerIteration.elapsedMillis());
+                avgTimeTaken = acumTimeTaken / numIters;
                 remaining = elapsedTimer.remainingTimeMillis();
                 stop = remaining <= 2 * avgTimeTaken || remaining <= remainingLimit;
-            }else if(params.stop_type == params.STOP_ITERATIONS) {
+            } else if (params.stop_type == params.STOP_ITERATIONS) {
                 numIters++;
                 stop = numIters >= params.num_iterations;
-            }else if(params.stop_type == params.STOP_FMCALLS)
-            {
-                fmCallsCount+=params.rollout_depth;
+            } else if (params.stop_type == params.STOP_FMCALLS) {
+                fmCallsCount += params.rollout_depth;
                 stop = (fmCallsCount + params.rollout_depth) > params.num_fmcalls;
             }
         }
         //System.out.println(" ITERS " + numIters);
+        /*int childc = 0;
+        for (int i = 0; i < children.length; i++){
+            if (children[i] != null)
+                childc = childc + 1;
+        }
+        System.out.println("children" + childc );*/
     }
 
     private SingleTreeNodeGroupO treePolicy(GameState state) {
 
         SingleTreeNodeGroupO cur = this;
 
-        while (!state.isTerminal() && cur.m_depth < params.rollout_depth)
-        {
+        while (!state.isTerminal() && cur.m_depth < params.rollout_depth) {
             if (cur.notFullyExpanded()) {
                 return cur.expand(state);
 
@@ -156,27 +154,43 @@ public class SingleTreeNodeGroupO
         //Roll the state
         roll(state, actions[bestAction]);
 
-        SingleTreeNodeGroupO tn = new SingleTreeNodeGroupO(params,this,bestAction,this.m_rnd,num_actions,
+        SingleTreeNodeGroupO tn = new SingleTreeNodeGroupO(params, this, bestAction, this.m_rnd, num_actions,
                 actions, fmCallsCount, rootStateHeuristic);
         children[bestAction] = tn;
         return tn;
     }
 
-    private void roll(GameState gs, Types.ACTIONS act)
-    {
+    private void roll(GameState gs, Types.ACTIONS act) {
         //Simple, all random first, then my position.
         int nPlayers = 4;
         Types.ACTIONS[] actionsAll = new Types.ACTIONS[4];
         int playerId = gs.getPlayerId() - Types.TILETYPE.AGENT0.getKey();
+        GameState gstmp = gs.copy();
 
-        for(int i = 0; i < nPlayers; ++i)
-        {
-            if(playerId == i)
-            {
+        for (int i = 0; i < nPlayers; ++i) {
+            if (playerId == i) {
                 actionsAll[i] = act;
-            }else {
-                int actionIdx = m_rnd.nextInt(gs.nActions());
-                actionsAll[i] = Types.ACTIONS.all().get(actionIdx);
+            } else
+                {
+                    ArrayList<Types.TILETYPE> enemyIDs = gs.getAliveEnemyIDs();
+                    Types.TILETYPE curEnemy = null;
+                    for ( Types.TILETYPE t : enemyIDs){
+                        if ((t.getKey() - Types.TILETYPE.AGENT0.getKey()) == i){
+                            curEnemy = t;
+                        }
+                    }
+
+                    // if enemy not find in AliveEnemies, this enemy is dead and just assign stop
+                    if (curEnemy == null){
+                        actionsAll[i] = Types.ACTIONS.ACTION_STOP;
+                    }
+                    else {
+                        int actionIdx = OpntsafeRandomAction(gs);
+                        //int actionIdx = m_rnd.nextInt(gs.nActions());
+                        actionsAll[i] = Types.ACTIONS.all().get(actionIdx);
+                    }
+                //
+
             }
         }
 
@@ -248,7 +262,7 @@ public class SingleTreeNodeGroupO
             int y = pos.y + dir.y;
 
             if (x >= 0 && x < width && y >= 0 && y < height)
-                if(board[y][x] != Types.TILETYPE.FLAMES)
+                if(board[y][x] != Types.TILETYPE.FLAMES || board[y][x] != Types.TILETYPE.BOMB)
                     return nAction;
 
             actionsToTry.remove(nAction);
@@ -361,5 +375,63 @@ public class SingleTreeNodeGroupO
         }
 
         return false;
+    }
+    // Getting
+    private int OpntsafeRandomAction(GameState state) {
+        Types.TILETYPE[][] board = state.getBoard();
+        ArrayList<Types.ACTIONS> actionsToTry = Types.ACTIONS.all();
+        int width = board.length;
+        int height = board[0].length;
+
+        while (actionsToTry.size() > 0) {
+
+            int nAction = m_rnd.nextInt(actionsToTry.size());
+            Types.ACTIONS act = actionsToTry.get(nAction);
+            Vector2d dir = act.getDirection().toVec();
+
+            Vector2d pos = state.getPosition();
+            int x = pos.x + dir.x;
+            int y = pos.y + dir.y;
+
+            int X = x+1;
+            int Y = y+0;
+
+            //if (X >= 0 && X < width && Y >= 0 && Y < height) {
+                /*if (board[Y][X] != Types.TILETYPE.AGENT0 || board[Y][X] != Types.TILETYPE.AGENT1 || board[Y][X] != Types.TILETYPE.AGENT2 || board[Y][X] != Types.TILETYPE.AGENT3) {
+                    return 5;
+                }
+            //}
+            X = x-1;
+            Y = y+0;
+            //if (X >= 0 && X < width && Y >= 0 && Y < height) {
+                if (board[Y][X] != Types.TILETYPE.AGENT0 || board[Y][X] != Types.TILETYPE.AGENT1 || board[Y][X] != Types.TILETYPE.AGENT2 || board[Y][X] != Types.TILETYPE.AGENT3) {
+                    return 5;
+                }
+            //}
+            X = x+0;
+            Y = y+1;
+            //if (X >= 0 && X < width && Y >= 0 && Y < height)
+            //{
+            //if (board[Y][X] != Types.TILETYPE.AGENT0 || board[Y][X] != Types.TILETYPE.AGENT1 || board[Y][X] != Types.TILETYPE.AGENT2 || board[Y][X] != Types.TILETYPE.AGENT3) {
+                    //return 5;
+                }
+            //}
+            X = x+0;
+            Y = y-1;
+            //if (X >= 0 && X < width && Y >= 0 && Y < height)
+            //{
+                //if (board[Y][X] != Types.TILETYPE.AGENT0 || board[Y][X] != Types.TILETYPE.AGENT1 || board[Y][X] != Types.TILETYPE.AGENT2 || board[Y][X] != Types.TILETYPE.AGENT3) {
+                    return 5;
+                //}
+            //}*/
+            if (x >= 0 && x < width && y >= 0 && y < height){
+                if (board[y][x] != Types.TILETYPE.FLAMES || board[y][x] != Types.TILETYPE.BOMB || board[y][x] != Types.TILETYPE.RIGID)
+                {
+                    return nAction;
+                }
+            }
+            actionsToTry.remove(nAction);
+        }
+        return m_rnd.nextInt(num_actions);
     }
 }
