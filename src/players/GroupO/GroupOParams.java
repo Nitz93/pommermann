@@ -25,16 +25,16 @@ public class GroupOParams implements ParameterSet {
 
     // Parameters
     public double K = Math.sqrt(2);
-    public int rollout_depth = 1000;//10;
+    public int rollout_depth = 50;//10;
     public int heuristic_method = CUSTOM_HEURISTIC;
 
     // Budget settings
     public int stop_type = STOP_TIME;
     public int num_iterations = 200;
     public int num_fmcalls = 2000;
-    public int num_time = 100;
+    public int num_time = 40;
 
-    public int m = 8;
+    public int m = 10;
 
 
     @Override

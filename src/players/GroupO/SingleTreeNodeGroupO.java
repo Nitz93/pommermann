@@ -112,13 +112,13 @@ public class SingleTreeNodeGroupO {
                 stop = (fmCallsCount + params.rollout_depth) > params.num_fmcalls;
             }
         }
-        //System.out.println(" ITERS " + numIters);
-        /*int childc = 0;
-        for (int i = 0; i < children.length; i++){
-            if (children[i] != null)
-                childc = childc + 1;
-        }
-        System.out.println("children" + childc );*/
+//        System.out.println(" ITERS " + numIters);
+//        int childc = 0;
+//        for (int i = 0; i < children.length; i++){
+//            if (children[i] != null)
+//                childc = childc + 1;
+//        }
+//        System.out.println("children" + childc );
     }
 
     private SingleTreeNodeGroupO treePolicy(GameState state) {
@@ -417,13 +417,13 @@ public class SingleTreeNodeGroupO {
                 }
             //}
             X = x+0;
-            Y = y-1;
-            //if (X >= 0 && X < width && Y >= 0 && Y < height)
-            //{
-                //if (board[Y][X] != Types.TILETYPE.AGENT0 || board[Y][X] != Types.TILETYPE.AGENT1 || board[Y][X] != Types.TILETYPE.AGENT2 || board[Y][X] != Types.TILETYPE.AGENT3) {
+            Y = y-1;*/
+            if (x >= 0 && x < width && y >= 0 && y < height)
+            {
+                if (board[y][x] != Types.TILETYPE.AGENT0 || board[y][x] != Types.TILETYPE.AGENT1 || board[y][x] != Types.TILETYPE.AGENT2 || board[y][x] != Types.TILETYPE.AGENT3) {
                     return 5;
-                //}
-            //}*/
+                }
+            }
             if (x >= 0 && x < width && y >= 0 && y < height){
                 if (board[y][x] != Types.TILETYPE.FLAMES || board[y][x] != Types.TILETYPE.BOMB || board[y][x] != Types.TILETYPE.RIGID)
                 {
